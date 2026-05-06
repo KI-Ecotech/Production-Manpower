@@ -1,0 +1,977 @@
+/* =========================================================
+   BASE
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+
+  font-family:
+    'IBM Plex Sans Thai',
+    sans-serif;
+
+  background:
+    #f1f5f9;
+
+  color:
+    #0f172a;
+
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* =========================================================
+   APP
+========================================================= */
+
+#app {
+
+  width: 100%;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+header {
+
+  height: 72px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #0f172a,
+      #1e293b
+    );
+
+  color: white;
+
+  flex-shrink: 0;
+
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.18);
+
+  z-index: 100;
+}
+
+.header-left {
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-icon {
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+header h1 {
+
+  margin: 0;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  line-height: 1.2;
+}
+
+#dateDisplay {
+
+  margin-top: 4px;
+
+  font-size: 12px;
+
+  color: #cbd5e1;
+}
+
+/* =========================================================
+   TOP NAV
+========================================================= */
+
+.top-nav {
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* =========================================================
+   NAV BUTTON
+========================================================= */
+
+.nav-link {
+
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 120px;
+
+  padding: 6px 12px;
+
+  border-radius: 8px;
+
+  text-decoration: none;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  letter-spacing: 0.2px;
+
+  color: #000000;
+
+  background: white;
+
+  border:
+    1px solid transparent;
+
+  transition:
+    all 0.2s ease;
+
+  box-shadow:
+    0 2px 6px rgba(0,0,0,0.08);
+}
+
+.nav-link:hover {
+
+  transform:
+    translateY(-2px);
+
+  background:
+    #e2e8f0;
+
+  color:
+    #0f172a;
+
+  box-shadow:
+    0 10px 18px rgba(0,0,0,0.12);
+}
+
+.nav-link.active::after {
+
+  content: '';
+
+  position: absolute;
+
+  left: 50%;
+  bottom: -6px;
+
+  transform:
+    translateX(-50%);
+
+  width: 70%;
+  height: 3px;
+
+  border-radius: 999px;
+
+  background: white;
+
+  animation:
+    navGlow 1.5s infinite alternate;
+}
+
+@keyframes navGlow {
+
+  from {
+
+    opacity: 0.6;
+
+    width: 55%;
+  }
+
+  to {
+
+    opacity: 1;
+
+    width: 80%;
+  }
+
+}
+
+/* =========================================================
+   SUMMARY
+========================================================= */
+
+.summary-bar {
+
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  padding: 14px 20px;
+
+  background: white;
+
+  border-bottom:
+    1px solid #e2e8f0;
+
+  flex-wrap: wrap;
+
+  flex-shrink: 0;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.04);
+}
+
+.summary-item {
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 14px;
+
+  color:
+    #334155;
+}
+
+.summary-dot {
+
+  width: 10px;
+  height: 10px;
+
+  border-radius: 999px;
+}
+
+.summary-driver {
+  background: #3b82f6;
+}
+
+.summary-helper {
+  background: #22c55e;
+}
+
+.summary-leave {
+  background: #ef4444;
+}
+
+.summary-total {
+  background: #64748b;
+}
+
+/* =========================================================
+   DATE INPUT
+========================================================= */
+
+#workDate {
+
+  border:
+    1px solid #cbd5e1;
+
+  border-radius: 12px;
+
+  padding:
+    8px 14px;
+
+  font-size: 14px;
+
+  background: white;
+
+  outline: none;
+
+  transition:
+    all 0.2s ease;
+}
+
+#workDate:focus {
+
+  border-color:
+    #60a5fa;
+
+  box-shadow:
+    0 0 0 4px rgba(96,165,250,0.15);
+}
+
+/* =========================================================
+   BOARD WRAPPER
+========================================================= */
+
+.board-wrapper {
+
+  flex: 1;
+
+  overflow: auto;
+
+  background:
+    #e2e8f0;
+}
+
+/* =========================================================
+   OUTSIDE GRID
+========================================================= */
+
+.outside-header,
+.outside-row {
+
+  display: grid;
+
+  grid-template-columns:
+    170px
+    repeat(7, minmax(0, 1fr))
+    90px;
+
+  width: 100%;
+}
+
+/* =========================================================
+   ONSIDE GRID
+========================================================= */
+
+.onside-header,
+.onside-row {
+
+  display: grid;
+
+  grid-template-columns:
+    160px
+    1fr
+    70px;
+
+  width: 100%;
+}
+
+.onside-row {
+
+  gap: 8px;
+  align-items: center;
+}
+
+/* =========================================================
+   BOARD HEADER
+========================================================= */
+
+.board-header {
+
+  position: sticky;
+  top: 0;
+
+  z-index: 50;
+
+  background:
+    linear-gradient(
+      135deg,
+      #1e293b,
+      #334155
+    );
+
+  color: white;
+
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* =========================================================
+   HEADER CELL
+========================================================= */
+
+.board-header-cell {
+
+  width: 100%;
+  min-width: 0;
+
+  padding: 16px 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  border-right:
+    1px solid rgba(255,255,255,0.08);
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   ROW
+========================================================= */
+
+.outside-row,
+.onside-row {
+
+  background: white;
+
+  border-bottom:
+    1px solid #e2e8f0;
+
+  transition:
+    background 0.2s ease;
+}
+
+.outside-row:hover,
+.onside-row:hover {
+
+  background:
+    #f8fafc;
+}
+
+/* =========================================================
+   AREA CELL
+========================================================= */
+
+.area-cell {
+
+  min-width: 0;
+
+  position: sticky;
+  left: 0;
+
+  z-index: 10;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 8px;
+
+  background:
+    #f8fafc;
+
+  border-right:
+    1px solid #e2e8f0;
+
+  overflow: hidden;
+}
+
+.area-color {
+
+  width: 8px;
+
+  align-self: stretch;
+
+  border-radius: 999px;
+
+  flex-shrink: 0;
+}
+
+.area-name {
+
+  font-size: 16px;
+  font-weight: 700;
+
+  color:
+    #0f172a;
+
+  line-height: 1.2;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.area-time {
+
+  margin-top: 4px;
+
+  font-size: 12px;
+
+  color:
+    #64748b;
+}
+
+/* =========================================================
+   STAFF CELL
+========================================================= */
+
+.staff-cell {
+
+  position: relative;
+
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 96px;
+
+  padding: 6px;
+
+  background: #f8fafc;
+
+  border-right:
+    1px solid #e2e8f0;
+
+  overflow: visible;
+}
+
+/* =========================================================
+   STAFF CARD
+========================================================= */
+
+.staff-card {
+
+  position: relative;
+
+  width: calc(100% - 8px);
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px;
+
+  background: white;
+
+  border:
+    1px solid #e2e8f0;
+
+  border-radius: 14px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 2px 6px rgba(0,0,0,0.05);
+
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    opacity 0.22s ease;
+
+  transform-origin: center center;
+
+  z-index: 1;
+
+  will-change:
+    transform;
+}
+
+/* =========================================================
+   DIM OTHER CARDS
+========================================================= */
+
+.board-row:hover .staff-card:not(:hover) {
+
+  opacity: 0.35;
+
+  transform:
+    scale(0.92);
+}
+
+/* =========================================================
+   EXPAND ACTIVE CARD
+========================================================= */
+
+.staff-card:hover {
+
+  opacity: 1 !important;
+
+  transform:
+    scale(2.5) !important;
+
+  z-index: 99999;
+
+  border-color:
+    #3b82f6;
+
+  box-shadow:
+    0 28px 60px rgba(0,0,0,0.30);
+}
+/* =========================================================
+   AVATAR WRAP
+========================================================= */
+
+.staff-avatar-wrap {
+
+  position: relative;
+
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   AVATAR
+========================================================= */
+
+.staff-avatar {
+
+  width: 100%;
+  height: 100%;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #d6d3d1,
+      #e7e5e4
+    );
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color:
+    #44403c;
+}
+
+/* =========================================================
+   AVATAR IMAGE
+========================================================= */
+
+.staff-avatar-image {
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  border-radius: 999px;
+
+  display: block;
+
+  background:
+    #e2e8f0;
+
+  border:
+    2px solid white;
+}
+
+/* =========================================================
+   STATUS BADGE
+========================================================= */
+
+.staff-status {
+
+  position: absolute;
+
+  right: -2px;
+  bottom: -2px;
+
+  width: 18px;
+  height: 18px;
+
+  border-radius: 999px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border:
+    2px solid white;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  color: white;
+
+  box-shadow:
+    0 2px 6px rgba(0,0,0,0.2);
+}
+
+.badge-driver {
+  background: #3b82f6;
+}
+
+.badge-helper {
+  background: #22c55e;
+}
+
+.badge-leave {
+  background: #ef4444;
+}
+
+/* =========================================================
+   STAFF INFO
+========================================================= */
+
+.staff-info {
+
+  flex: 1;
+
+  min-width: 0;
+}
+
+.staff-name {
+
+  font-size: 10px;
+  font-weight: 700;
+
+  color:
+    #0f172a;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.staff-name-th {
+
+  margin-top: 2px;
+
+  font-size: 8px;
+  font-weight: 500;
+
+  color:
+    #78716c;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   EMPTY SLOT
+========================================================= */
+
+.empty-slot {
+
+  font-size: 12px;
+
+  color:
+    #cbd5e1;
+}
+
+/* =========================================================
+   TOTAL
+========================================================= */
+
+.total-cell {
+
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: white;
+
+  overflow: hidden;
+}
+
+.total-number {
+
+  font-size: 18px;
+  font-weight: 700;
+
+  color:
+    #0f172a;
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty-state {
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 120px 20px;
+
+  text-align: center;
+}
+
+.empty-icon {
+
+  font-size: 56px;
+
+  margin-bottom: 16px;
+}
+
+.empty-title {
+
+  font-size: 18px;
+  font-weight: 700;
+
+  color:
+    #334155;
+}
+
+.empty-desc {
+
+  margin-top: 8px;
+
+  font-size: 13px;
+
+  color:
+    #94a3b8;
+}
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+#toast {
+
+  position: fixed;
+
+  right: 20px;
+  bottom: 20px;
+
+  padding:
+    12px 16px;
+
+  background:
+    #0f172a;
+
+  color: white;
+
+  border-radius: 14px;
+
+  font-size: 14px;
+
+  opacity: 0;
+
+  transform:
+    translateY(20px);
+
+  transition:
+    all 0.25s ease;
+
+  z-index: 99999;
+
+  box-shadow:
+    0 12px 24px rgba(0,0,0,0.2);
+}
+
+#toast.show {
+
+  opacity: 1;
+
+  transform:
+    translateY(0);
+}
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+::-webkit-scrollbar {
+
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+
+  background:
+    #e2e8f0;
+}
+
+::-webkit-scrollbar-thumb {
+
+  background:
+    #94a3b8;
+
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+
+  background:
+    #64748b;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1200px) {
+
+  .board-header-cell,
+  .summary-item {
+
+    font-size: 12px;
+  }
+
+  .staff-name {
+
+    font-size: 11px;
+  }
+
+  .staff-card:hover {
+
+    transform:
+      scale(1.6);
+  }
+
+}
+
+@media (max-width: 768px) {
+
+  header {
+
+    padding: 0 14px;
+  }
+
+  .summary-bar {
+
+    gap: 12px;
+
+    padding: 10px 14px;
+  }
+
+  .board-wrapper {
+
+    overflow-x: auto;
+  }
+
+  .outside-header,
+  .outside-row {
+
+    min-width: 980px;
+  }
+
+  .onside-header,
+  .onside-row {
+
+    min-width: 760px;
+  }
+
+  .staff-card {
+
+    padding: 8px;
+  }
+
+  .staff-card:hover {
+
+    transform:
+      scale(1.3);
+  }
+
+  .area-name {
+
+    font-size: 14px;
+  }
+
+}

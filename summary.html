@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="th" class="h-full">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>
+    Summary Dashboard
+  </title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+
+  <!-- Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- CSS -->
+  <link
+    href="style.css"
+    rel="stylesheet"
+  />
+
+  <style>
+
+    /* =====================================================
+       SUMMARY DASHBOARD
+    ===================================================== */
+
+    .dashboard-wrapper {
+
+      flex: 1;
+
+      overflow: auto;
+
+      padding: 20px;
+
+      background:
+        #e2e8f0;
+    }
+
+    /* =====================================================
+       CARDS
+    ===================================================== */
+
+    .dashboard-grid {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(6, minmax(0, 1fr));
+
+      gap: 16px;
+
+      margin-bottom: 20px;
+    }
+
+    .dashboard-card {
+
+      background: white;
+
+      border-radius: 18px;
+
+      overflow: hidden;
+
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .dashboard-header {
+
+      padding: 10px 14px;
+
+      font-size: 13px;
+      font-weight: 700;
+
+      color: white;
+    }
+
+    .dashboard-blue {
+      background: #2563eb;
+    }
+
+    .dashboard-green {
+      background: #16a34a;
+    }
+
+    .dashboard-red {
+      background: #ef4444;
+    }
+
+    .dashboard-purple {
+      background: #9333ea;
+    }
+
+    .dashboard-body {
+
+      padding: 18px;
+
+      text-align: center;
+    }
+
+    .dashboard-number {
+
+      font-size: 32px;
+      font-weight: 700;
+
+      line-height: 1;
+    }
+
+    .dashboard-label {
+
+      margin-top: 8px;
+
+      font-size: 12px;
+
+      color: #64748b;
+    }
+
+    /* =====================================================
+       CHARTS
+    ===================================================== */
+
+    .chart-grid {
+
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 20px;
+    }
+
+    .chart-card {
+
+      background: white;
+
+      border-radius: 18px;
+
+      padding: 20px;
+
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .chart-title {
+
+      margin-bottom: 20px;
+
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    canvas {
+
+      width: 100% !important;
+      height: 320px !important;
+    }
+
+    /* =====================================================
+       RESPONSIVE
+    ===================================================== */
+
+    @media (max-width: 1200px) {
+
+      .dashboard-grid {
+
+        grid-template-columns:
+          repeat(3, minmax(0, 1fr));
+      }
+
+      .chart-grid {
+
+        grid-template-columns:
+          1fr;
+      }
+
+    }
+
+    @media (max-width: 768px) {
+
+      .dashboard-grid {
+
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <div id="app">
+
+    <!-- ================================================= -->
+    <!-- HEADER -->
+    <!-- ================================================= -->
+
+    <header>
+
+      <div class="header-left">
+
+        <!-- ICON -->
+
+        <div class="header-icon">
+
+          <img
+            src="https://www.jobbkk.com/upload/employer/0A/3EA/00B3EA/images/46058.webp"
+            alt="Logo"
+            style="
+              width:42px;
+              height:42px;
+              object-fit:cover;
+              border-radius:10px;
+            "
+          />
+
+        </div>
+
+        <!-- TITLE -->
+
+        <div>
+
+          <h1>
+            Production Summary Dashboard
+          </h1>
+
+          <div id="dateDisplay"></div>
+
+        </div>
+
+      </div>
+
+      <!-- ================================================= -->
+      <!-- NAVIGATION -->
+      <!-- ================================================= -->
+
+      <div class="top-nav">
+
+        <a
+          href="summary.html"
+          class="nav-link active"
+        >
+          Summary
+        </a>
+
+        <a
+          href="index.html"
+          class="nav-link"
+        >
+          Outside
+        </a>
+
+        <a
+          href="onside.html"
+          class="nav-link"
+        >
+          Onside
+        </a>
+
+      </div>
+
+    </header>
+
+    <!-- ================================================= -->
+    <!-- SUMMARY -->
+    <!-- ================================================= -->
+
+    <div class="summary-bar">
+
+      <div class="summary-item">
+
+        <label>
+          วันที่:
+        </label>
+
+        <input
+          id="workDate"
+          type="date"
+        />
+
+      </div>
+
+    </div>
+
+    <!-- ================================================= -->
+    <!-- DASHBOARD -->
+    <!-- ================================================= -->
+
+    <div class="dashboard-wrapper">
+
+      <!-- ================================================= -->
+      <!-- SUMMARY CARDS -->
+      <!-- ================================================= -->
+
+      <div class="dashboard-grid">
+
+        <div class="dashboard-card">
+
+          <div class="dashboard-header dashboard-blue">
+            Total Manpower
+          </div>
+
+          <div class="dashboard-body">
+
+            <div
+              class="dashboard-number"
+              id="sumTotal"
+            >
+              0
+            </div>
+
+            <div class="dashboard-label">
+              คน
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="dashboard-card">
+
+          <div class="dashboard-header dashboard-green">
+            Come To Work
+          </div>
+
+          <div class="dashboard-body">
+
+            <div
+              class="dashboard-number"
+              id="sumWorking"
+            >
+              0
+            </div>
+
+            <div class="dashboard-label">
+              คน
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="dashboard-card">
+
+          <div class="dashboard-header dashboard-red">
+            Leave
+          </div>
+
+          <div class="dashboard-body">
+
+            <div
+              class="dashboard-number"
+              id="sumLeave"
+            >
+              0
+            </div>
+
+            <div class="dashboard-label">
+              คน
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="dashboard-card">
+
+          <div class="dashboard-header dashboard-purple">
+            Outside
+          </div>
+
+          <div class="dashboard-body">
+
+            <div
+              class="dashboard-number"
+              id="sumOutside"
+            >
+              0
+            </div>
+
+            <div class="dashboard-label">
+              คน
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="dashboard-card">
+
+          <div class="dashboard-header dashboard-blue">
+            Onside
+          </div>
+
+          <div class="dashboard-body">
+
+            <div
+              class="dashboard-number"
+              id="sumOnside"
+            >
+              0
+            </div>
+
+            <div class="dashboard-label">
+              คน
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="dashboard-card">
+
+          <div class="dashboard-header dashboard-green">
+            Working %
+          </div>
+
+          <div class="dashboard-body">
+
+            <div
+              class="dashboard-number"
+              id="workingPercent"
+            >
+              0%
+            </div>
+
+            <div class="dashboard-label">
+              Attendance
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ================================================= -->
+      <!-- CHART -->
+      <!-- ================================================= -->
+
+      <div class="chart-grid">
+
+        <div class="chart-card">
+
+          <div class="chart-title">
+            Outside by Area
+          </div>
+
+          <canvas id="outsideChart"></canvas>
+
+        </div>
+
+        <div class="chart-card">
+
+          <div class="chart-title">
+            Onside Department
+          </div>
+
+          <canvas id="onsideChart"></canvas>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ================================================= -->
+  <!-- TOAST -->
+  <!-- ================================================= -->
+
+  <div id="toast"></div>
+
+  <!-- ================================================= -->
+  <!-- SCRIPT -->
+  <!-- ================================================= -->
+
+  <script src="summary.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="th" class="h-full">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+    <title>
+    Production Manpower Outside
+    </title>
+
+    <link
+    rel="icon"
+    href="https://www.jobbkk.com/upload/employer/0A/3EA/00B3EA/images/46058.webp"
+    />
+
+    <link
+    rel="shortcut icon"
+    href="https://www.jobbkk.com/upload/employer/0A/3EA/00B3EA/images/46058.webp"
+    />
+
+    <link
+    rel="apple-touch-icon"
+    href="https://www.jobbkk.com/upload/employer/0A/3EA/00B3EA/images/46058.webp"
+    />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+
+  <!-- Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- CSS -->
+  <link
+    href="style.css"
+    rel="stylesheet"
+  />
+
+</head>
+
+
+
+<body>
+
+  <div id="app">
+
+    <!-- ================================================= -->
+    <!-- HEADER -->
+    <!-- ================================================= -->
+
+    <header>
+
+      <div class="header-left">
+
+        <!-- ICON -->
+
+        <div class="header-icon">
+
+        <img
+            src="https://www.jobbkk.com/upload/employer/0A/3EA/00B3EA/images/46058.webp"
+            alt="Logo"
+            style="
+            width:42px;
+            height:42px;
+            object-fit:cover;
+            border-radius:10px;
+            "
+        />
+
+        </div>
+
+
+
+        <!-- TITLE -->
+
+        <div>
+
+          <h1>
+            Production Manpower Outside Board
+          </h1>
+
+          <div id="dateDisplay"></div>
+
+        </div>
+
+      </div>
+    <!-- ================================================= -->
+    <!-- NAVIGATION -->
+    <!-- ================================================= -->
+
+      <div class="top-nav">
+
+        <a
+          href="summary.html"
+          class="nav-link"
+        >
+          Summary
+        </a>
+
+        <a
+          href="index.html"
+          class="nav-link  active"
+        >
+          Outside
+        </a>
+
+        <a
+          href="onside.html"
+          class="nav-link"
+        >
+          Onside
+        </a>
+
+      </div>
+
+    </header>
+
+
+
+    <!-- ================================================= -->
+    <!-- SUMMARY -->
+    <!-- ================================================= -->
+
+    <div class="summary-bar">
+
+      <!-- DATE -->
+
+      <div class="summary-item">
+
+        <label>
+          วันที่:
+        </label>
+
+        <input
+          id="workDate"
+          type="date"
+        />
+
+      </div>
+
+
+
+      <!-- DRIVER -->
+
+      <div class="summary-item">
+
+        <span
+          class="
+            summary-dot
+            summary-driver
+          "
+        ></span>
+
+        พนักงานขับรถ :
+
+        <strong id="sumDrivers">
+          0
+        </strong>
+
+      </div>
+
+
+
+      <!-- HELPER -->
+
+      <div class="summary-item">
+
+        <span
+          class="
+            summary-dot
+            summary-helper
+          "
+        ></span>
+
+        พนักงานติดรถ :
+
+        <strong id="sumHelpers">
+          0
+        </strong>
+
+      </div>
+
+
+
+      <!-- TOTAL -->
+
+      <div class="summary-item">
+
+        <span
+          class="
+            summary-dot
+            summary-total
+          "
+        ></span>
+
+        Total:
+
+        <strong id="sumTotal">
+          0
+        </strong>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- ================================================= -->
+    <!-- BOARD -->
+    <!-- ================================================= -->
+
+    <div class="board-wrapper">
+
+<!-- ================================================= -->
+<!-- BOARD HEADER -->
+<!-- ================================================= -->
+
+
+      <!-- ================================================= -->
+      <!-- BODY -->
+      <!-- ================================================= -->
+
+<div
+  id="outsideBoard"
+  class="board-body"
+></div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- ================================================= -->
+  <!-- TOAST -->
+  <!-- ================================================= -->
+
+  <div id="toast"></div>
+
+
+
+  <!-- ================================================= -->
+  <!-- JS -->
+  <!-- ================================================= -->
+
+  <script src="app.js"></script>
+
+</body>
+
+</html>
