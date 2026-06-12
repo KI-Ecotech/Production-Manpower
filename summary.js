@@ -1,1004 +1,456 @@
 // =====================================================
-// GOOGLE SHEET
+// GOOGLE SHEET CONFIGURATION
 // =====================================================
-
-const SHEET_ID =
-  '1btQ_Zv4lp22r3zs0eM6Ssss8fr84dbO4BWqEneeXmg0';
-
-const OUTSIDE_SHEET =
-  'outside';
-
-const ONSIDE_SHEET =
-  'onside';
-
-// =====================================================
-// STATE
-// =====================================================
+const SHEET_ID = '1btQ_Zv4lp22r3zs0eM6Ssss8fr84dbO4BWqEneeXmg0';
+const OUTSIDE_SHEET = 'outside';
+const ONSIDE_SHEET = 'onside';
+const EMPLOYEE_SHEET = 'employees';
 
 let outsideJobs = [];
-
 let onsideJobs = [];
+let employeeDatabase = {}; 
 
-let outsideChart = null;
+// ตัวแปรสำหรับนับจำนวนพนักงานทั้งหมดในบริษัท แยกตามประเภทจากชีต employees โดยตรง
+let totalThaiInCompany = 0;
+let totalThaiSubInCompany = 0;
+let totalMyanmarInCompany = 0;
+let totalManagementInCompany = 0;
+let isDatabaseLoaded = false; 
 
-let onsideChart = null;
-
-// =====================================================
-// TODAY
-// =====================================================
-
-const today =
-  new Date();
-
-const yyyy =
-  today.getFullYear();
-
-const mm =
-  String(today.getMonth() + 1)
-    .padStart(2, '0');
-
-const dd =
-  String(today.getDate())
-    .padStart(2, '0');
-
-let selectedDate =
-  `${yyyy}-${mm}-${dd}`;
-
-document.getElementById(
-  'workDate'
-).value =
-  selectedDate;
+// Chart Global Instances
+let ioDonutChart = null;
+let outsideAreaChart = null;
+let manpowerTypeChart = null;
+let leaveTopChart = null;
 
 // =====================================================
-// DATE DISPLAY
+// DATE & DISPLAY INITIALIZATION
 // =====================================================
+const today = new Date();
+const yyyy = today.getFullYear();
+const mm = String(today.getMonth() + 1).padStart(2, '0');
+const dd = String(today.getDate()).padStart(2, '0');
+let selectedDate = `${yyyy}-${mm}-${dd}`;
 
-const dateDisplay =
-  document.getElementById(
-    'dateDisplay'
-  );
+document.getElementById('workDate').value = selectedDate;
 
 function updateDateTime() {
-
-  if (!dateDisplay)
-    return;
-
-  const now =
-    new Date();
-
-  // =====================================================
-  // DATE
-  // =====================================================
-
-  const dateText =
-    now.toLocaleDateString(
-      'th-TH',
-      {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }
-    );
-
-  // =====================================================
-  // TIME
-  // =====================================================
-
-  const hours =
-    String(
-      now.getHours()
-    ).padStart(2, '0');
-
-  const minutes =
-    String(
-      now.getMinutes()
-    ).padStart(2, '0');
-
-  // =====================================================
-  // FINAL
-  // =====================================================
-
-  dateDisplay.textContent =
-
-    `${dateText}  ${hours}.${minutes} น.`;
-
+  const dateDisplay = document.getElementById('dateDisplay');
+  if (!dateDisplay) return;
+  const now = new Date();
+  const dateText = now.toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  dateDisplay.textContent = `Data Date : ${dateText} ${hours}.${minutes} น.`;
 }
-
-// =====================================================
-// INIT
-// =====================================================
-
 updateDateTime();
+setInterval(updateDateTime, 1000);
+
+document.getElementById('workDate').addEventListener('change', async (e) => {
+  selectedDate = e.target.value;
+  await loadEmployeeDatabase();
+  await loadOutsideData();
+  await loadOnsideData();
+  renderSummary();
+});
 
 // =====================================================
-// AUTO UPDATE EVERY 1 SEC
+// LOAD EMPLOYEE DATABASE (ปรับปรุงให้อ่านค่าจาก Col E และนับยอดรวมทุกประเภท)
 // =====================================================
-
-setInterval(
-  updateDateTime,
-  1000
-);
-// =====================================================
-// DATE CHANGE
-// =====================================================
-
-document
-  .getElementById(
-    'workDate'
-  )
-  .addEventListener(
-    'change',
-    async e => {
-
-      selectedDate =
-        e.target.value;
-
-      renderSummary();
-
-    }
-  );
-
-// =====================================================
-// LOAD OUTSIDE
-// =====================================================
-
-async function loadOutsideData() {
-
+async function loadEmployeeDatabase() {
   try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${EMPLOYEE_SHEET}`;
+    const response = await fetch(url);
+    const text = await response.text();
+    const json = JSON.parse(text.substring(47).slice(0, -2));
+    const rows = json.table.rows;
 
-    const url =
-      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${OUTSIDE_SHEET}`;
+    employeeDatabase = {}; 
+    // รีเซ็ตยอดนับใหม่ทุกครั้งที่มีการดึงข้อมูลรอบใหม่
+    totalThaiInCompany = 0;
+    totalThaiSubInCompany = 0;
+    totalMyanmarInCompany = 0;
+    totalManagementInCompany = 0;
 
-    const response =
-      await fetch(url);
+    rows.forEach((row, index) => {
+      if (index === 0) return; // ข้ามหัวตาราง
+      if (!row || !row.c) return;
 
-    const text =
-      await response.text();
+      const engName = row.c[1]?.v?.toString().trim();
+      const empType = row.c[5]?.v?.toString().trim(); 
 
-    const json =
-      JSON.parse(
-        text.substring(47).slice(0, -2)
-      );
+      if (engName) {
+        const typeLower = (empType || '').toLowerCase();
+        let standardType = 'Thai';
 
-    const rows =
-      json.table.rows;
+        // ตรวจสอบเงื่อนไขจากคอลัมน์ E พร้อมแปลงเป็นตัวพิมพ์เล็กเพื่อความแม่นยำ
+        if (typeLower === 'management') {
+          standardType = 'Management';
+          totalManagementInCompany++;
+        } else if (typeLower === 'thai sub' || typeLower === 'thaisub') {
+          standardType = 'Thai Sub';
+          totalThaiSubInCompany++;
+        } else if (typeLower === 'myanmar') {
+          standardType = 'Myanmar';
+          totalMyanmarInCompany++;
+        } else {
+          standardType = 'Thai';
+          totalThaiInCompany++;
+        }
+        
+        // บันทึกค่ามาตรฐานลงแรมเพื่อใช้แมปปิ้งในชีต Onside / Outside
+        employeeDatabase[engName] = standardType;
+      }
+    });
 
-    outsideJobs =
-      rows.map(row => ({
-
-        date:
-          row.c[0]?.f || '',
-
-        name:
-          row.c[1]?.v || '',
-
-        driver:
-          row.c[4]?.v || '',
-
-        helpers: [
-
-          row.c[5]?.v || '',
-          row.c[6]?.v || '',
-          row.c[7]?.v || '',
-          row.c[8]?.v || '',
-          row.c[9]?.v || '',
-          row.c[10]?.v || '',
-          row.c[11]?.v || ''
-
-        ].filter(Boolean),
-
-        total:
-          Number(row.c[12]?.v || 0)
-
-      }));
-
+    isDatabaseLoaded = true; 
+    console.log("จำนวนพนักงานทั้งหมดที่นับได้จากชีต employees (Col E):", {
+      Thai: totalThaiInCompany,
+      ThaiSub: totalThaiSubInCompany,
+      Myanmar: totalMyanmarInCompany,
+      Management: totalManagementInCompany
+    });
+  } catch (err) {
+    console.error('loadEmployeeDatabase error:', err);
   }
-
-  catch (err) {
-
-    console.error(
-      'loadOutsideData error:',
-      err
-    );
-
-  }
-
 }
 
 // =====================================================
-// LOAD ONSIDE
+// DATA FETCHING & MAPPING
 // =====================================================
+async function loadOutsideData() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${OUTSIDE_SHEET}`;
+    const response = await fetch(url);
+    const text = await response.text();
+    const json = JSON.parse(text.substring(47).slice(0, -2));
+    const rows = json.table.rows;
+
+    outsideJobs = rows.map(row => {
+      const namesList = [
+        row.c[4]?.v, row.c[5]?.v, row.c[6]?.v, row.c[7]?.v, 
+        row.c[8]?.v, row.c[9]?.v, row.c[10]?.v, row.c[11]?.v
+      ].map(v => String(v || '').trim()).filter(Boolean);
+
+      return {
+        date: row.c[0]?.f || '',
+        name: row.c[1]?.v || '',
+        people: namesList,
+        total: namesList.length
+      };
+    });
+  } catch (err) {
+    console.error('loadOutsideData error:', err);
+  }
+}
 
 async function loadOnsideData() {
-
   try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${ONSIDE_SHEET}`;
+    const response = await fetch(url);
+    const text = await response.text();
+    const json = JSON.parse(text.substring(47).slice(0, -2));
+    const rows = json.table.rows;
 
-    const url =
-      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${ONSIDE_SHEET}`;
+    onsideJobs = rows.map(row => {
+      const namesList = [
+        row.c[2]?.v, row.c[3]?.v, row.c[4]?.v, row.c[5]?.v, row.c[6]?.v, 
+        row.c[7]?.v, row.c[8]?.v, row.c[9]?.v, row.c[10]?.v, row.c[11]?.v, 
+        row.c[12]?.v, row.c[13]?.v, row.c[14]?.v, row.c[15]?.v
+      ].map(v => String(v || '').trim()).filter(Boolean);
 
-    const response =
-      await fetch(url);
-
-    const text =
-      await response.text();
-
-    const json =
-      JSON.parse(
-        text.substring(47).slice(0, -2)
-      );
-
-    const rows =
-      json.table.rows;
-
-    onsideJobs =
-      rows.map(row => ({
-
-        date:
-          row.c[0]?.f || '',
-
-        name:
-          row.c[1]?.v || '',
-
-        employees: [
-
-          row.c[2]?.v || '',
-          row.c[3]?.v || '',
-          row.c[4]?.v || '',
-          row.c[5]?.v || '',
-          row.c[6]?.v || '',
-          row.c[7]?.v || '',
-          row.c[8]?.v || '',
-          row.c[9]?.v || '',
-          row.c[10]?.v || '',
-          row.c[11]?.v || '',
-          row.c[12]?.v || '',
-          row.c[13]?.v || '',
-          row.c[14]?.v || '',
-          row.c[15]?.v || ''
-
-        ].filter(Boolean),
-
-        total:
-          Number(row.c[16]?.v || 0)
-
-      }));
-
+      return {
+        date: row.c[0]?.f || '',
+        name: row.c[1]?.v || '',
+        people: namesList,
+        total: namesList.length
+      };
+    });
+  } catch (err) {
+    console.error('loadOnsideData error:', err);
   }
-
-  catch (err) {
-
-    console.error(
-      'loadOnsideData error:',
-      err
-    );
-
-  }
-
 }
-
-// =====================================================
-// FILTER DATE
-// =====================================================
 
 function filterJobsByDate(data) {
-
   return data.filter(job => {
-
-    if (!job.date)
-      return false;
-
-    const parts =
-      job.date
-        .toString()
-        .trim()
-        .split('/');
-
-    if (parts.length !== 3)
-      return false;
-
-    const day =
-      parts[0]
-        .padStart(2, '0');
-
-    const month =
-      parts[1]
-        .padStart(2, '0');
-
-    const year =
-      parts[2];
-
-    const sheetDate =
-      `${year}-${month}-${day}`;
-
-    return (
-      sheetDate === selectedDate
-    );
-
+    if (!job.date) return false;
+    const parts = job.date.toString().trim().split('/');
+    if (parts.length !== 3) return false;
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    const year = parts[2];
+    return `${year}-${month}-${day}` === selectedDate;
   });
-
 }
 
 // =====================================================
-// RENDER SUMMARY
+// MAIN CORE SUMMARY RENDERER
 // =====================================================
-
 function renderSummary() {
+  if (!isDatabaseLoaded) return; 
 
-  const leaveTypes = [
+  const leaveTypes = ['ลาป่วย', 'ลากิจ', 'ลาพักร้อน'];
+  const outsideFiltered = filterJobsByDate(outsideJobs);
+  const onsideFiltered = filterJobsByDate(onsideJobs);
 
-    'ลาป่วย',
-    'ลากิจ',
-    'ลาพักร้อน'
+  // โครงสร้างแรมนับจำนวนคนงานประจำวันเพื่อใช้ทำ Chart และคำนวณการทำงานจริง
+  let counts = {
+    thai: { onside: 0, outside: 0 },
+    thaiSub: { onside: 0, outside: 0 },
+    myanmar: { onside: 0, outside: 0 },
+    management: { onside: totalManagementInCompany, outside: 0 },
+    leave: 0
+  };
 
-  ];
+  let areaSummary = {};
+  let managementLeaveCount = 0; 
 
-  const outsideFiltered =
-    filterJobsByDate(
-      outsideJobs
-    );
-
-  const onsideFiltered =
-    filterJobsByDate(
-      onsideJobs
-    );
-
-  // =====================================================
-  // OUTSIDE TOTAL
-  // =====================================================
-
-  let outsideTotal = 0;
-
+  // 1. Outside Processing
   outsideFiltered.forEach(job => {
+    if (!areaSummary[job.name]) {
+      areaSummary[job.name] = { thai: 0, sub: 0, total: 0 };
+    }
 
-    outsideTotal +=
-      job.total;
+    job.people.forEach(personName => {
+      const empType = employeeDatabase[personName] || 'Thai';
 
+      if (empType === 'Thai Sub') {
+        counts.thaiSub.outside++;
+        areaSummary[job.name].sub++;
+      } else if (empType === 'Myanmar') {
+        counts.myanmar.outside++;
+      } else if (empType === 'Management') {
+        counts.management.outside++;
+      } else {
+        counts.thai.outside++;
+        areaSummary[job.name].thai++;
+      }
+      areaSummary[job.name].total++;
+    });
   });
 
-  // =====================================================
-  // ONSIDE TOTAL
-  // =====================================================
-
-  let onsideTotal = 0;
-
+  // 2. Onside & Leave Processing
+  let onsideTotalRealRows = 0;
   let leaveTotal = 0;
 
   onsideFiltered.forEach(job => {
+    const isLeaveJob = leaveTypes.includes(job.name);
+    
+    if (isLeaveJob) {
+      leaveTotal += job.total;
+      counts.leave += job.total;
 
-    const isLeave =
-
-      leaveTypes.includes(
-        job.name
-      );
-
-    if (isLeave) {
-
-      leaveTotal +=
-        job.total;
-
+      job.people.forEach(personName => {
+        const empType = employeeDatabase[personName];
+        if (empType === 'Management') {
+          managementLeaveCount++;
+        }
+      });
     } else {
+      onsideTotalRealRows += job.total;
+      
+      job.people.forEach(personName => {
+        const empType = employeeDatabase[personName] || 'Thai';
 
-      onsideTotal +=
-        job.total;
-
+        if (empType === 'Management') {
+          // ข้ามเนื่องจากล็อกฐานตั้งต้นผู้บริหารไว้แล้ว
+        } else if (empType === 'Thai Sub') {
+          counts.thaiSub.onside++;
+        } else if (empType === 'Myanmar') {
+          counts.myanmar.onside++;
+        } else {
+          counts.thai.onside++;
+        }
+      });
     }
-
   });
 
-  // =====================================================
-  // FINAL TOTAL
-  // =====================================================
+  // สถิติ Management ในโรงงาน (Onside)
+  counts.management.onside = totalManagementInCompany - counts.management.outside - managementLeaveCount;
+  if (counts.management.onside < 0) counts.management.onside = 0;
 
-  const total =
-    outsideTotal +
-    onsideTotal +
-    leaveTotal;
+  // [เปลี่ยนจุดนี้] ดึงยอดรวมพนักงานทั้งบริษัท 100% จากชีต employees Col E โดยตรงตามที่ต้องการ
+  const finalTotalThai = totalThaiInCompany;
+  const finalTotalSub = totalThaiSubInCompany;
+  const finalTotalMyanmar = totalMyanmarInCompany;
+  const finalTotalManage = totalManagementInCompany; 
 
-  const working =
-    outsideTotal +
-    onsideTotal;
+  // จำนวนพนักงานที่เข้ามาทำงานจริง ณ วันนั้นๆ
+  const finalOnsideTotal = counts.thai.onside + counts.thaiSub.onside + counts.myanmar.onside + counts.management.onside;
+  const finalOutsideTotal = counts.thai.outside + counts.thaiSub.outside + counts.myanmar.outside + counts.management.outside;
 
-  const workingPercent =
+  // กำหนดฐานยอดรวมอิงจากพนักงานทั้งหมดในบริษัท เพื่อการคำนวณสัดส่วน % ที่ถูกต้อง
+  const totalManpower = finalTotalThai + finalTotalSub + finalTotalMyanmar + finalTotalManage;
+  const totalWorking = finalOutsideTotal + finalOnsideTotal;
 
-    total > 0
+  // คำนวณสัดส่วนค่าร้อยละสะท้อนไปยัง UI
+  const getPer = (val) => totalManpower > 0 ? ((val / totalManpower) * 100).toFixed(1) : 0;
+  const workPercent = totalManpower > 0 ? ((totalWorking / totalManpower) * 100).toFixed(1) : 0;
+  const leavePercent = totalManpower > 0 ? ((leaveTotal / totalManpower) * 100).toFixed(1) : 0;
+  const outsideRatio = totalManpower > 0 ? ((finalOutsideTotal / totalManpower) * 100).toFixed(1) : 0;
+  const onsideRatio = totalManpower > 0 ? ((finalOnsideTotal / totalManpower) * 100).toFixed(1) : 0;
 
-      ? (
-          (
-            working /
-            total
-          ) * 100
-        ).toFixed(1)
+  // สั่งเขียนค่าลงบล็อกแสดงผล HTML DOM Elements (ยอดรวมจริงจากชีต Employees 100%)
+  document.getElementById('sumTotal').textContent = totalManpower;
+  document.getElementById('sumThai').textContent = finalTotalThai;
+  document.getElementById('perThai').textContent = `คน (${getPer(finalTotalThai)}%)`;
+  document.getElementById('sumThaiSub').textContent = finalTotalSub;
+  document.getElementById('perThaiSub').textContent = `คน (${getPer(finalTotalSub)}%)`;
+  document.getElementById('sumMyanmar').textContent = finalTotalMyanmar;
+  document.getElementById('perMyanmar').textContent = `คน (${getPer(finalTotalMyanmar)}%)`;
+  document.getElementById('sumManagement').textContent = finalTotalManage;
+  document.getElementById('perManagement').textContent = `คน (${getPer(finalTotalManage)}%)`;
+  
+  // สรุปยอดสถานะประจำวัน
+  document.getElementById('sumWorking').textContent = totalWorking;
+  document.getElementById('perWorking').textContent = `คน (${workPercent}%)`;
+  document.getElementById('sumLeave').textContent = leaveTotal;
+  document.getElementById('perLeave').textContent = `คน (${leavePercent}%)`;
 
-      : 0;
+  document.getElementById('targetLeaveVal').textContent = `${leavePercent}%`;
+  document.getElementById('targetOutsideVal').textContent = `${outsideRatio}%`;
+  document.getElementById('targetOnsideVal').textContent = `${onsideRatio}%`;
 
-  // =====================================================
-  // UPDATE UI
-  // =====================================================
-
-  document.getElementById(
-    'sumTotal'
-  ).textContent =
-    total;
-
-  document.getElementById(
-    'sumWorking'
-  ).textContent =
-    working;
-
-  document.getElementById(
-    'sumLeave'
-  ).textContent =
-    leaveTotal;
-
-  document.getElementById(
-    'sumOutside'
-  ).textContent =
-    outsideTotal;
-
-  document.getElementById(
-    'sumOnside'
-  ).textContent =
-    onsideTotal;
-
-  document.getElementById(
-    'workingPercent'
-  ).textContent =
-    `${workingPercent}%`;
-
-  // =====================================================
-  // CHARTS
-  // =====================================================
-
-  renderOutsideChart(
-    outsideFiltered
-  );
-
-  renderOnsideChart(
-    onsideFiltered
-  );
-
+  // วาดโครงข่าย Chart.js ใหม่
+  drawIOChart(finalOnsideTotal, finalOutsideTotal);
+  drawOutsideAreaChart(areaSummary);
+  drawManpowerTypeChart(counts);
+  drawLeaveTopChart(onsideFiltered.filter(j => leaveTypes.includes(j.name)));
 }
 
 // =====================================================
-// OUTSIDE CHART
+// CHART RENDERING OPERATIONS
 // =====================================================
-
-function renderOutsideChart(data) {
-
-  const labels =
-    data.map(job => job.name);
-
-  const values =
-    data.map(job => job.total);
-
-  // DESTROY OLD
-
-  if (outsideChart) {
-
-    outsideChart.destroy();
-
-  }
-
-  // GRADIENT
-
-  const ctx =
-    document
-      .getElementById(
-        'outsideChart'
-      )
-      .getContext('2d');
-
-  const gradient =
-    ctx.createLinearGradient(
-      0,
-      0,
-      0,
-      400
-    );
-
-  gradient.addColorStop(
-    0,
-    '#3b82f6'
-  );
-
-  gradient.addColorStop(
-    1,
-    '#93c5fd'
-  );
-
-  // CHART
-
-  outsideChart =
-    new Chart(ctx, {
-
-      type: 'bar',
-
-      data: {
-
-        labels,
-
-        datasets: [
-
-          {
-
-            label:
-              'Outside',
-
-            data:
-              values,
-
-            backgroundColor:
-              gradient,
-
-            borderRadius:
-              14,
-
-            borderSkipped:
-              false,
-
-            hoverBackgroundColor:
-              '#2563eb',
-
-            maxBarThickness:
-              48
-
-          }
-
-        ]
-
-      },
-
-      options: {
-
-        responsive: true,
-
-        maintainAspectRatio: false,
-
-        animation: {
-
-          duration: 1200,
-
-          easing:
-            'easeOutQuart'
-
-        },
-
-        plugins: {
-
-          legend: {
-            display: false
-          },
-
-          tooltip: {
-
-            backgroundColor:
-              '#0f172a',
-
-            titleColor:
-              '#ffffff',
-
-            bodyColor:
-              '#ffffff',
-
-            padding: 14,
-
-            cornerRadius: 12,
-
-            displayColors: false
-
-          }
-
-        },
-
-        scales: {
-
-          x: {
-
-            grid: {
-              display: false
-            },
-
-            ticks: {
-
-              color:
-                '#475569',
-
-              font: {
-
-                family:
-                  'IBM Plex Sans Thai',
-
-                size: 12,
-
-                weight:
-                  '600'
-
-              }
-
-            }
-
-          },
-
-          y: {
-
-            beginAtZero: true,
-
-            grid: {
-
-              color:
-                'rgba(148,163,184,0.15)',
-
-              drawBorder:
-                false
-
-            },
-
-            ticks: {
-
-              color:
-                '#64748b',
-
-              font: {
-
-                family:
-                  'IBM Plex Sans Thai'
-
-              }
-
-            }
-
-          }
-
-        }
-
-      }
-
-    });
-
-}
-
-// =====================================================
-// ONSIDE CHART
-// =====================================================
-
-function renderOnsideChart(data) {
-
-  const labels =
-    data.map(job => job.name);
-
-  const values =
-    data.map(job => job.total);
-
-  if (onsideChart) {
-
-    onsideChart.destroy();
-
-  }
-
-  // COLORS
-
-  const colors = [
-
-    '#2563eb',
-    '#16a34a',
-    '#f59e0b',
-    '#ef4444',
-    '#9333ea',
-    '#06b6d4',
-    '#84cc16',
-    '#ec4899',
-    '#f97316',
-    '#14b8a6'
-
-  ];
-
-  // CHART
-
-  onsideChart =
-    new Chart(
-
-      document.getElementById(
-        'onsideChart'
-      ),
-
-      {
-
-        type: 'doughnut',
-
-        data: {
-
-          labels,
-
-          datasets: [
-
-            {
-
-              data:
-                values,
-
-              backgroundColor:
-                colors,
-
-              borderWidth:
-                0,
-
-              hoverOffset:
-                16
-
-            }
-
-          ]
-
-        },
-
-        options: {
-
-          responsive: true,
-
-          maintainAspectRatio: false,
-
-          cutout: '68%',
-
-          animation: {
-
-            animateRotate: true,
-
-            duration: 1400,
-
-            easing:
-              'easeOutExpo'
-
-          },
-
-          plugins: {
-
-            legend: {
-
-              position:
-                'bottom',
-
-              labels: {
-
-                usePointStyle: true,
-
-                pointStyle:
-                  'circle',
-
-                padding: 18,
-
-                color:
-                  '#334155',
-
-                font: {
-
-                  family:
-                    'IBM Plex Sans Thai',
-
-                  size: 12,
-
-                  weight:
-                    '600'
-
-                }
-
-              }
-
-            },
-
-            tooltip: {
-
-              backgroundColor:
-                '#0f172a',
-
-              titleColor:
-                '#ffffff',
-
-              bodyColor:
-                '#ffffff',
-
-              padding: 14,
-
-              cornerRadius: 12
-
-            }
-
-          }
-
-        }
-
-      }
-
-    );
-
-}
-
-// =====================================================
-// LINE CHART
-// =====================================================
-
-function renderTrendChart(
-  canvasId,
-  labels,
-  values,
-  color
-) {
-
-  const ctx =
-    document
-      .getElementById(
-        canvasId
-      )
-      .getContext('2d');
-
-  const gradient =
-    ctx.createLinearGradient(
-      0,
-      0,
-      0,
-      300
-    );
-
-  gradient.addColorStop(
-    0,
-    color + '55'
-  );
-
-  gradient.addColorStop(
-    1,
-    color + '00'
-  );
-
-  return new Chart(ctx, {
-
-    type: 'line',
-
+function drawIOChart(onsideVal, outsideVal) {
+  if (ioDonutChart) ioDonutChart.destroy();
+  const ctx = document.getElementById('ioDonutChart').getContext('2d');
+  ioDonutChart = new Chart(ctx, {
+    type: 'doughnut',
     data: {
-
-      labels,
-
-      datasets: [
-
-        {
-
-          data:
-            values,
-
-          borderColor:
-            color,
-
-          backgroundColor:
-            gradient,
-
-          fill: true,
-
-          tension: 0.4,
-
-          borderWidth: 3,
-
-          pointRadius: 5,
-
-          pointHoverRadius: 7,
-
-          pointBackgroundColor:
-            '#ffffff',
-
-          pointBorderWidth: 3,
-
-          pointBorderColor:
-            color
-
-        }
-
-      ]
-
+      labels: ['Onside', 'Outside'],
+      datasets: [{
+        data: [onsideVal, outsideVal],
+        backgroundColor: ['#00b050', '#ff0000'],
+        borderWidth: 1
+      }]
     },
-
     options: {
-
       responsive: true,
-
       maintainAspectRatio: false,
-
-      animation: {
-
-        duration: 1400,
-
-        easing:
-          'easeOutQuart'
-
-      },
-
+      cutout: '68%',
       plugins: {
-
-        legend: {
-          display: false
-        },
-
-        tooltip: {
-
-          backgroundColor:
-            '#0f172a',
-
-          padding: 14,
-
-          cornerRadius: 12
-
-        }
-
-      },
-
-      scales: {
-
-        x: {
-
-          grid: {
-            display: false
-          },
-
-          ticks: {
-
-            color:
-              '#64748b'
-
-          }
-
-        },
-
-        y: {
-
-          beginAtZero: true,
-
-          grid: {
-
-            color:
-              'rgba(148,163,184,0.12)'
-
-          },
-
-          ticks: {
-
-            color:
-              '#64748b'
-
-          }
-
-        }
-
+        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } }
       }
-
     }
+  });
+}
 
+function drawOutsideAreaChart(areaSummary) {
+  if (outsideAreaChart) outsideAreaChart.destroy();
+  
+  const labels = Object.keys(areaSummary);
+  const dataThai = labels.map(k => areaSummary[k].thai);
+  const dataSub = labels.map(k => areaSummary[k].sub);
+
+  const finalLabels = labels.length > 0 ? labels : ['Atsumi', 'Auto Metal', 'Minamida', 'Msat Phase 9', 'Ricoh On nut'];
+  const finalThai = labels.length > 0 ? dataThai : [0, 0, 0, 0, 0];
+  const finalSub = labels.length > 0 ? dataSub : [0, 0, 0, 0, 0];
+
+  const ctx = document.getElementById('outsideAreaChart').getContext('2d');
+  outsideAreaChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: finalLabels,
+      datasets: [
+        { label: 'Thai', data: finalThai, backgroundColor: '#0070c0' },
+        { label: 'Thai Sub', data: finalSub, backgroundColor: '#ff00c0' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+      plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } }
+    }
+  });
+}
+
+function drawManpowerTypeChart(counts) {
+  if (manpowerTypeChart) manpowerTypeChart.destroy();
+  const ctx = document.getElementById('manpowerTypeChart').getContext('2d');
+  
+  manpowerTypeChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Thai', 'Thai Sub', 'Myanmar', 'Management'],
+      datasets: [
+        { label: 'Onside', data: [counts.thai.onside, counts.thaiSub.onside, counts.myanmar.onside, counts.management.onside], backgroundColor: '#00b050' },
+        { label: 'Outside', data: [counts.thai.outside, counts.thaiSub.outside, counts.myanmar.outside, counts.management.outside], backgroundColor: '#ff0000' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true } },
+      plugins: { legend: { position: 'top', alignment: 'end' } }
+    }
+  });
+}
+
+function drawLeaveTopChart(leaveJobs) {
+  if (leaveTopChart) leaveTopChart.destroy();
+  
+  let leaveMap = {};
+  leaveJobs.forEach(job => {
+    job.people.forEach(p => {
+      leaveMap[p] = (leaveMap[p] || 0) + 1;
+    });
   });
 
+  let labels = Object.keys(leaveMap).sort((a,b) => leaveMap[b] - leaveMap[a]).slice(0, 5);
+  let data = labels.map(l => leaveMap[l]);
+
+  if (labels.length === 0) {
+    labels = ['ไม่มีข้อมูลการลาวันนี้'];
+    data = [0];
+  }
+
+  const ctx = document.getElementById('leaveTopChart').getContext('2d');
+  leaveTopChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Leave Amount',
+        data: data,
+        backgroundColor: '#ff0000',
+        barThickness: 16
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } },
+      plugins: { legend: { display: false } }
+    }
+  });
 }
 
 // =====================================================
-// INIT
+// SYSTEM LIFECYCLE INITIALIZER
 // =====================================================
-
 async function init() {
-
+  await loadEmployeeDatabase(); 
   await loadOutsideData();
-
   await loadOnsideData();
-
   renderSummary();
-
 }
-
 init();
 
-// =====================================================
-// AUTO REFRESH
-// =====================================================
-
 setInterval(async () => {
-
+  await loadEmployeeDatabase();
   await loadOutsideData();
-
   await loadOnsideData();
-
   renderSummary();
-
 }, 10000);
